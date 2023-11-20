@@ -1,0 +1,179 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous" />
+  <style>
+    .custom-description {
+      height: 200px;
+    }
+
+    .custom-description .description-details {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .custom-description .description-details p {
+      flex: 1;
+    }
+
+    .custom-modal .modal-content {
+      height: 400px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: white;
+      border: 2px solid rgba(0, 0, 0, 0.125);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+  </style>
+  <title>{{title}}</title>
+</head>
+
+<body>
+
+
+
+  <div class="modal fade bd-example-modal-lg custom-modal" tabindex="-1" role="dialog"
+    aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 500px;">
+      <div class="modal-content">
+
+      </div>
+    </div>
+  </div>
+  </div>
+  <div class="container">
+    <div class="row" style="margin-top: 20px;">
+      <div class="col-md-12">
+        <button id="createProductButton" class="btn btn-primary">Create product</button>
+        <button id="deleteProductButton" class="btn btn-danger">Delete product</button>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row" id="products-container">
+        {{#each products}}
+        <div class="col-md-4 mb-4">
+          <div class="card" style="height: 560px; margin-top:80px;" key="{{this.id}}">
+            <img src="{{this.thumbnail}}" class="card-img-top mx-auto" style="max-height: 289px;  max-width: 100%;" />
+            <div class="card-body d-flex flex-column align-items-center">
+              <h5 class="card-title">{{this.title}}</h5>
+              <div class="card-description custom-description">
+                <p class="card-text">{{this.description}}</p>
+                <div class="description-details">
+                  <p>Price: ${{this.price}}</p>
+                  <p>Stock: {{this.stock}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var createProductButton = document.querySelector(".btn-primary");
+        var largeModal = document.querySelector(".bd-example-modal-lg");
+
+        createProductButton.addEventListener("click", function () {
+
+          largeModal.style.display = "block";
+
+
+          largeModal.classList.add("show");
+
+
+          largeModal.style.display = "block";
+
+
+          document.body.style.overflow = "hidden";
+        });
+
+        var closeModalButtons = document.querySelectorAll(".close");
+
+        for (var i = 0; i < closeModalButtons.length; i++) {
+          closeModalButtons[i].addEventListener("click", function () {
+
+            largeModal.classList.remove("show");
+            largeModal.style.display = "none";
+            document.body.style.overflow = "auto";
+          });
+        }
+
+        window.addEventListener("click", function (event) {
+
+          if (event.target === largeModal) {
+            largeModal.classList.remove("show");
+            largeModal.style.display = "none";
+            document.body.style.overflow = "auto";
+          }
+        });
+      });
+    </script>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      const socket = io();
+
+      socket.on('productAdded', function (product) {
+        // Get the container for the products
+        const productsContainer = document.getElementById('products-container');
+
+        // Create a new product card
+        const productCard = document.createElement('div');
+        productCard.className = 'col-md-4 mb-4';
+        productCard.innerHTML = `
+  <div class="card" style="height: 560px; margin-top:80px;" key="${product._id}">
+    <img src="${product.thumbnail}" class="card-img-top mx-auto" style="max-height: 289px;  max-width: 100%;" />
+    <div class="card-body d-flex flex-column align-items-center">
+      <h5 class="card-title">${product.title}</h5>
+      <div class="card-description custom-description">
+        <p class="card-text">${product.description}</p>
+        <div class="description-details">
+          <p>Price: $${product.price}</p>
+          <p>Stock: ${product.stock}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+
+        // Add the new product card to the container
+        productsContainer.appendChild(productCard);
+      });
+
+      socket.on('productUpdated', function (updatedProduct) {
+        // Find the product in your UI by its ID
+        const productCard = document.querySelector(`div[key='${updatedProduct._id}']`);
+
+        // Update the product information
+        productCard.querySelector('.card-title').textContent = updatedProduct.title;
+        productCard.querySelector('.card-text').textContent = updatedProduct.description;
+        productCard.querySelector('.description-details p:nth-child(1)').textContent = `Price: $${updatedProduct.price}`;
+        productCard.querySelector('.description-details p:nth-child(2)').textContent = `Stock: ${updatedProduct.stock}`;
+      });
+
+      socket.on('productDeleted', function (deletedProductId) {
+        // Find the product in your UI by its ID
+        const productCard = document.querySelector(`div[key='${deletedProductId}']`);
+
+        // Remove that element
+        productCard.remove();
+      });
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+      crossorigin="anonymous"></script>
+</body>
+
+</html>
