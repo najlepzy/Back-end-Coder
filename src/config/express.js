@@ -2,6 +2,8 @@ import express, { urlencoded } from "express";
 /* Routes */
 import productRouter from "../routes/productsRouter.js";
 import cartRouter from "../routes/cartRouter.js";
+import userRouter from "../routes/userRouter.js";
+import ticketRouter from "../routes/ticketRouter.js";
 /* Routes */
 
 /* env */
@@ -25,6 +27,9 @@ import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 import { startIo, getIo } from './socketIo.js';
 /* socketIo */
+/* session */
+import sessionMiddleware from "../middleware/session.js";
+/* session */
 
 /* path */
 const __filename = fileURLToPath(import.meta.url);
@@ -33,6 +38,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = createServer(app);
+
 /* io */
 startIo(server);
 /* io */
@@ -43,7 +49,10 @@ app.engine('handlebars', engine({
 app.set('view engine', 'handlebars');
 app.set("views", path.resolve(__dirname, "../views"));
 /* handlebars */
+
+
 app.use(express.json());
+app.use(sessionMiddleware());
 app.use(urlencoded({ extended: true }));
 productRouter.use(express.json());
 
@@ -54,6 +63,8 @@ const port = process.env.PORT
 /* products */
 app.use("/api/products", productRouter);
 app.use("/api/carts", cartRouter);
+app.use("/api/users", userRouter);
+app.use("/api/tickets", ticketRouter);
 app.use("/", handlebarsRouter);
 /* products */
 
