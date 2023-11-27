@@ -54,13 +54,15 @@ class TicketManager {
 
         try {
             const savedTicket = await ticket.save();
+            const io = getIo();
+            io.emit('messageAdded', { ticketId: savedTicket._id, message });
             return formatTicketDates(savedTicket);
         } catch (error) {
             throw new Error('Error saving ticket: ' + error.message);
         }
     }
 
-    async getAllTickets() {
+    async getAllTickets(user) {
         try {
             const tickets = await Ticket.find().populate('userId', 'username');
             return tickets.map(ticket => formatTicketDates(ticket));
@@ -68,17 +70,17 @@ class TicketManager {
             throw new Error('Error getting tickets: ' + error.message);
         }
     }
-    async getTicketById(id) {
+
+    async getUserTicket(userId) {
         try {
-            const ticket = await Ticket.findById(id);
+            const ticket = await Ticket.findOne({ userId });
             if (ticket) {
-                return formatTicketDates(ticket);
+                return { _id: ticket._id, messages: ticket.message };
             }
         } catch (error) {
-            throw new Error('Error getting ticket: ' + error.message);
+            throw new Error('Error getting user ticket: ' + error.message);
         }
     }
-
 }
 
 export default TicketManager;

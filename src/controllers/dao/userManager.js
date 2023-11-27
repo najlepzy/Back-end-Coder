@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User, SubAdmin, Admin } from "../../models/userSchema.js";
+import Ticket from '../../models/ticketSchema.js';
+import { getIo } from '../../config/socketIo.js';
 import BlacklistedToken from "../../models/tokenSchema.js";
 
 const roleToModel = {
@@ -27,7 +29,10 @@ class UserManager {
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
             const user = new roleToModel[role]({ username, email, password: hashedPassword, role });
-            return await user.save();
+            const savedUser = await user.save();
+            const io = getIo();
+            io.emit('userCreated', savedUser);
+            return savedUser;
         } catch (error) {
             throw new Error('Saving user: ' + error.message);
         }
@@ -63,12 +68,21 @@ class UserManager {
             throw new Error('Getting user: ' + error.message);
         }
     }
-
+    async getUserTickets(userId) {
+        try {
+            const tickets = await Ticket.find({ userId }).populate('userId', 'username');
+            return tickets;
+        } catch (error) {
+            throw new Error('Getting user tickets: ' + error.message);
+        }
+    }
 
     async logout(token) {
         try {
             const blacklistedToken = new BlacklistedToken({ token });
             await blacklistedToken.save();
+            const io = getIo();
+            io.emit('userLoggedOut', { token });
         } catch (error) {
             throw new Error('Logging out: ' + error.message);
         }
@@ -85,6 +99,8 @@ class UserManager {
             if (!user) {
                 throw new Error('Deleting user: User not found');
             }
+            const io = getIo();
+            io.emit('userDeleted', user);
             return user;
         } catch (error) {
             throw error.message;

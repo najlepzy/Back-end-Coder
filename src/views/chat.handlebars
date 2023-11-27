@@ -129,7 +129,7 @@
         }
 
         .chatBubble {
-            max-width: 100%;
+            max-width: 60%;
             padding: 10px;
             margin-left: 50px;
             border-radius: 20px;
@@ -173,7 +173,7 @@
             right: 0;
             width: 80%;
             height: 95px;
-            background-color: #f5f5f58e;
+            background-color: #f5f5f5;
             border: 2px solid rgba(0, 0, 0, 0.045);
             padding: 10px 30px;
         }
@@ -220,6 +220,8 @@
 
         .textMessage {
             font-weight: 500;
+            width: 100%;
+            word-break: break-all;
         }
     </style>
     <title>User Chat</title>
@@ -250,17 +252,19 @@
             <div class="realtimeChat d-flex flex-column">
                 <!-- AskUser -->
                 <div class="askResponseContainer w-100">
-                    {{#each messages}}
+                    {{#each tickets}}
+                    {{#each this.message}}
                     <div class="ask d-flex align-items-center mb-5">
                         <div class="userAsk">
                             <i class="fas fa-user userIcon2"></i>
                         </div>
                         <div class="chatContainer">
                             <div class="chatBubble askBubble d-flex align-items-center justify-content-center">
-                                <p class="textMessage ms-2 m-0">{{this.text}}</p>
+                                <p class="textMessage ms-0 m-0">{{this.text}}</p>
                             </div>
                         </div>
                     </div>
+                    {{/each}}
                     {{/each}}
                     <!-- AskUser -->
 
@@ -283,7 +287,7 @@
         </div>
         <div class="newMessageContainer d-flex justify-content-between align-items-center">
             <input type="text" class="messageSquare">
-            <button class="sendBtn">Send</button>
+            <button id="sendBtn" class="sendBtn">Send</button>
         </div>
 
 
@@ -295,8 +299,8 @@
             crossorigin="anonymous"></script>
 
 
+        <script src="/socket.io/socket.io.js"></script>
         {{!-- DOM --}}
-
         {{!-- logout Funct --}}
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -313,23 +317,61 @@
             });
         </script>
         {{!-- logout Funct --}}
+        <script>
+            const socket = io();
+            let userId = "{{userId}}";
 
-        {{!-- DOM --}}
-        <script>window.onload = function () {
-                // Get all user boxes
-                var userBoxes = document.getElementsByClassName('usersBoxes');
+            document.getElementById('sendBtn').addEventListener('click', function () {
+                const messageText = document.querySelector('.messageSquare').value;
+                // Emit the 'createTicket' event with the userId and messageText as data
+                socket.emit('createTicket', { userId, message: messageText });
+            });
 
-                // Add click event listener to each user box
-                for (var i = 0; i < userBoxes.length; i++) {
-                    userBoxes[i].addEventListener('click', function () {
-                        // Get ticket data from data attribute
-                        var ticketId = this.getAttribute('data-ticket-id');
+            // Remove all previous listeners for the 'ticketCreated' event
+            socket.off('ticketCreated');
 
-                        // Log ticket data
-                        console.log('Ticket ID:', ticketId);
-                    });
+            // Listen for the 'ticketCreated' event and log the data received
+            socket.on('ticketCreated', function (data) {
+                console.log('Ticket created:', data);
+
+                // If data.message is an array, get the text of the last message
+                if (Array.isArray(data.message)) {
+                    let lastMessage = data.message[data.message.length - 1];
+                    data.message = lastMessage.text;
                 }
-            };</script>
+
+                // Create a new message container
+                const newMessageContainer = document.createElement('div');
+                newMessageContainer.className = 'ask d-flex align-items-center mb-5';
+
+                // Create a new userAsk element
+                const newUserAsk = document.createElement('div');
+                newUserAsk.className = 'userAsk';
+                newUserAsk.innerHTML = '<i class="fas fa-user userIcon2"></i>';
+                newMessageContainer.appendChild(newUserAsk);
+
+                // Create a new chatContainer element
+                const newChatContainer = document.createElement('div');
+                newChatContainer.className = 'chatContainer';
+
+                // Create a new chatBubble element and add the new message to it
+                const newChatBubble = document.createElement('div');
+                newChatBubble.className = 'chatBubble askBubble d-flex align-items-center justify-content-center';
+                const newMessage = document.createElement('p');
+                newMessage.className = 'textMessage ms-0 m-0';
+                newMessage.textContent = data.message;
+                newChatBubble.appendChild(newMessage);
+                newChatContainer.appendChild(newChatBubble);
+
+                newMessageContainer.appendChild(newChatContainer);
+
+                // Add the new message container to the askResponseContainer
+                const askResponseContainer = document.querySelector('.askResponseContainer');
+                askResponseContainer.appendChild(newMessageContainer);
+            });
+        </script>
+        {{!-- DOM --}}
+
 </body>
 
 </html>

@@ -8,6 +8,7 @@ const productManager = new ProductManager();
 const userManager = new UserManager();
 const ticketManager = new TicketManager();
 
+/* products */
 handlebarsRouter.get('/', async (req, res) => {
     const products = await productManager.getProducts();
     res.render('home', { products });
@@ -17,6 +18,9 @@ handlebarsRouter.get('/realtime-products', async (req, res) => {
     const products = await productManager.getProducts();
     res.render('realTimeProducts', { products });
 });
+/* products */
+
+/* accs */
 
 handlebarsRouter.get('/login', async (req, res) => {
     res.render('login');
@@ -45,7 +49,8 @@ handlebarsRouter.post('/logout', async (req, res) => {
     });
 });
 
-
+/* accs */
+/* realtimeChat */
 handlebarsRouter.get('/support-chat', async (req, res) => {
     const tickets = await ticketManager.getAllTickets();
     const user = req.session.user;
@@ -56,14 +61,21 @@ handlebarsRouter.get('/support-chat', async (req, res) => {
     }
 });
 handlebarsRouter.get('/chat', async (req, res) => {
-    const tickets = await ticketManager.getAllTickets();
     const user = req.session.user;
     if (user) {
-        res.render('chat', { tickets, username: user.username });
+        try {
+            const tickets = await userManager.getUserTickets(user._id);
+            // Obtener todos los mensajes en una sola matriz
+            const messages = tickets.flatMap(ticket => ticket.message);
+
+            res.render('chat', { tickets, messages, username: user.username, userId: user._id });
+        } catch (error) {
+            res.status(500).send('Error fetching user tickets');
+        }
     } else {
         res.redirect('/login');
     }
 });
-
+/* realtimeChat */
 
 export default handlebarsRouter;
