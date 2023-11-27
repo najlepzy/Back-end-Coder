@@ -4,6 +4,7 @@ import { User, SubAdmin, Admin } from "../../models/userSchema.js";
 import Ticket from '../../models/ticketSchema.js';
 import { getIo } from '../../config/socketIo.js';
 import BlacklistedToken from "../../models/tokenSchema.js";
+import { formatTicketDates } from "../../utils/dateFormat.js";
 
 const roleToModel = {
     'admin': Admin,
@@ -71,7 +72,7 @@ class UserManager {
     async getUserTickets(userId) {
         try {
             const tickets = await Ticket.find({ userId }).populate('userId', 'username');
-            return tickets;
+            return tickets.map(ticket => formatTicketDates(ticket));
         } catch (error) {
             throw new Error('Getting user tickets: ' + error.message);
         }

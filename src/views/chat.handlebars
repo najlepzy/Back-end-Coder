@@ -128,13 +128,19 @@
             overflow-y: auto;
         }
 
+        .ask {
+            width: fit-content;
+        }
+
         .chatBubble {
-            max-width: 60%;
+            max-width: 90%;
             padding: 10px;
             margin-left: 50px;
             border-radius: 20px;
             background-color: #f0f0f0;
             position: relative;
+            white-space: normal;
+            overflow-wrap: break-word;
         }
 
         .chatBubble2 {
@@ -155,6 +161,12 @@
             height: 0;
             border: 10px solid;
             border-color: transparent #f0f0f0 transparent transparent;
+        }
+
+        .textMessage {
+            font-weight: 500;
+            width: 100%;
+            word-break: break-word;
         }
 
         .topsideBarUserName {
@@ -218,10 +230,11 @@
             color: rgba(0, 0, 0, 0.657);
         }
 
-        .textMessage {
+        .date {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.567);
             font-weight: 500;
-            width: 100%;
-            word-break: break-all;
+            margin-left: -240px;
         }
     </style>
     <title>User Chat</title>
@@ -254,15 +267,17 @@
                 <div class="askResponseContainer w-100">
                     {{#each tickets}}
                     {{#each this.message}}
-                    <div class="ask d-flex align-items-center mb-5">
+                    <div class="ask d-flex align-items-center justify-content-center mb-5">
                         <div class="userAsk">
                             <i class="fas fa-user userIcon2"></i>
                         </div>
                         <div class="chatContainer">
                             <div class="chatBubble askBubble d-flex align-items-center justify-content-center">
-                                <p class="textMessage ms-0 m-0">{{this.text}}</p>
+                                <p class="textMessage ms-1 m-0">{{this.text}}</p>
                             </div>
+
                         </div>
+                        <p class="date m-0 ms-3">{{this.createdAt}}</p>
                     </div>
                     {{/each}}
                     {{/each}}
@@ -323,38 +338,32 @@
 
             document.getElementById('sendBtn').addEventListener('click', function () {
                 const messageText = document.querySelector('.messageSquare').value;
-                // Emit the 'createTicket' event with the userId and messageText as data
                 socket.emit('createTicket', { userId, message: messageText });
+                document.querySelector('.messageSquare').value = '';
             });
 
-            // Remove all previous listeners for the 'ticketCreated' event
             socket.off('ticketCreated');
 
-            // Listen for the 'ticketCreated' event and log the data received
             socket.on('ticketCreated', function (data) {
                 console.log('Ticket created:', data);
 
-                // If data.message is an array, get the text of the last message
                 if (Array.isArray(data.message)) {
                     let lastMessage = data.message[data.message.length - 1];
                     data.message = lastMessage.text;
+                    data.createdAt = lastMessage.createdAt;
                 }
 
-                // Create a new message container
                 const newMessageContainer = document.createElement('div');
                 newMessageContainer.className = 'ask d-flex align-items-center mb-5';
 
-                // Create a new userAsk element
                 const newUserAsk = document.createElement('div');
                 newUserAsk.className = 'userAsk';
                 newUserAsk.innerHTML = '<i class="fas fa-user userIcon2"></i>';
                 newMessageContainer.appendChild(newUserAsk);
 
-                // Create a new chatContainer element
                 const newChatContainer = document.createElement('div');
                 newChatContainer.className = 'chatContainer';
 
-                // Create a new chatBubble element and add the new message to it
                 const newChatBubble = document.createElement('div');
                 newChatBubble.className = 'chatBubble askBubble d-flex align-items-center justify-content-center';
                 const newMessage = document.createElement('p');
@@ -365,9 +374,15 @@
 
                 newMessageContainer.appendChild(newChatContainer);
 
-                // Add the new message container to the askResponseContainer
+                const newCreatedAt = document.createElement('p');
+                newCreatedAt.className = 'date m-0 ms-3';
+                newCreatedAt.textContent = data.createdAt;
+                newMessageContainer.appendChild(newCreatedAt);
+
                 const askResponseContainer = document.querySelector('.askResponseContainer');
                 askResponseContainer.appendChild(newMessageContainer);
+                const realtimeChat = document.querySelector('.realtimeChat');
+                realtimeChat.scrollTop = realtimeChat.scrollHeight;
             });
         </script>
         {{!-- DOM --}}
