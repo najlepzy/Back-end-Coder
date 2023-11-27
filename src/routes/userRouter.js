@@ -41,7 +41,7 @@ userRouter.post('/logout', checkBlacklistedToken, async (req, res) => {
     try {
         await userManager.logout(token);
         const io = getIo();
-        io.emit('userLoggedOut', { token }); // Emit the 'userLoggedOut' event
+        io.emit('userLoggedOut', { token });
         req.session.destroy((err) => {
             if (err) {
                 return res.status(500).json({ error: err.toString() });

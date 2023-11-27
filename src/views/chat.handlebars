@@ -129,7 +129,11 @@
         }
 
         .ask {
-            width: fit-content;
+            width: 100%;
+        }
+
+        .response {
+            width: 100%;
         }
 
         .chatBubble {
@@ -144,15 +148,28 @@
         }
 
         .chatBubble2 {
-            max-width: 60%;
+            max-width: 90%;
             padding: 10px;
             margin-left: 50px;
             border-radius: 20px;
             background-color: #f0f0f0;
             position: relative;
+            white-space: normal;
+            overflow-wrap: break-word;
         }
 
         .chatBubble::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -10px;
+            width: 0;
+            height: 0;
+            border: 10px solid;
+            border-color: transparent #f0f0f0 transparent transparent;
+        }
+
+        .chatBubble2::after {
             content: "";
             position: absolute;
             top: 0;
@@ -261,44 +278,26 @@
 
             </div>
 
-            {{!-- CHAT STARTS HERE --}}
+            <!-- Messages -->
             <div class="realtimeChat d-flex flex-column">
-                <!-- AskUser -->
-                <div class="askResponseContainer w-100">
-                    {{#each tickets}}
-                    {{#each this.message}}
-                    <div class="ask d-flex align-items-center justify-content-center mb-5">
-                        <div class="userAsk">
-                            <i class="fas fa-user userIcon2"></i>
-                        </div>
-                        <div class="chatContainer">
-                            <div class="chatBubble askBubble d-flex align-items-center justify-content-center">
-                                <p class="textMessage ms-1 m-0">{{this.text}}</p>
-                            </div>
-
-                        </div>
-                        <p class="date m-0 ms-3">{{this.createdAt}}</p>
+                {{#each tickets}}
+                {{#each this.messages}}
+                <div
+                    class="{{#if this.isUser}}ask d-flex align-items-center justify-content-start{{else}}response d-flex align-items-center flex-row-reverse{{/if}} mb-5">
+                    <div class="user{{#if this.isUser}}Ask{{else}}Response{{/if}} d-flex align-items-center">
+                        <i class="fas fa-user userIcon{{#if this.isUser}}2{{else}}3{{/if}} ms-5"></i>
                     </div>
-                    {{/each}}
-                    {{/each}}
-                    <!-- AskUser -->
-
-                    {{!-- responseUser --}}
-                    <div class="response d-flex align-items-center flex-row-reverse mb-5">
-                        <div class="userResponse">
-                            <i class="fas fa-user userIcon3 ms-5"></i>
-                        </div>
-                        <div class="chatContainer d-flex justify-content-end">
-                            <div class="chatBubble2 askBubble d-flex">
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias tenetur temporibus
-                                    ad ex reiciendis vel aut ipsa deleniti consectetur accusantium!.</p>
-                            </div>
+                    <div class="chatContainer d-flex">
+                        <div class="chatBubble{{#if this.isAdmin}}2{{/if}} askBubble d-flex">
+                            <p class="textMessage m-0 ms-1">{{this.text}}</p>
                         </div>
                     </div>
-                    {{!-- responseUser --}}
+                    <p class="date m-0 ms-3">{{this.createdAt}}</p>
                 </div>
+                {{/each}}
+                {{/each}}
             </div>
-            {{!-- CHAT ENDS HERE --}}
+            <!-- Messages -->
         </div>
         <div class="newMessageContainer d-flex justify-content-between align-items-center">
             <input type="text" class="messageSquare">
@@ -335,56 +334,148 @@
         <script>
             const socket = io();
             let userId = "{{userId}}";
+            const chatContainer = document.querySelector('.realtimeChat');
 
             document.getElementById('sendBtn').addEventListener('click', function () {
                 const messageText = document.querySelector('.messageSquare').value;
-                socket.emit('createTicket', { userId, message: messageText });
+                socket.emit('createTicket', { userId, message: messageText, role: 'user' });
                 document.querySelector('.messageSquare').value = '';
             });
 
             socket.off('ticketCreated');
-
             socket.on('ticketCreated', function (data) {
                 console.log('Ticket created:', data);
 
-                if (Array.isArray(data.message)) {
-                    let lastMessage = data.message[data.message.length - 1];
+                if (Array.isArray(data.messages)) {
+                    let lastMessage = data.messages[data.messages.length - 1];
                     data.message = lastMessage.text;
                     data.createdAt = lastMessage.createdAt;
+
+                    // Create new message element
+                    const newMessage = document.createElement('div');
+                    newMessage.classList.add('ask', 'd-flex', 'align-items-center', 'justify-content-start', 'mb-5');
+
+                    // Add user icon
+                    const userDiv = document.createElement('div');
+                    userDiv.classList.add('userAsk', 'd-flex', 'align-items-center');
+                    const userIcon = document.createElement('i');
+                    userIcon.classList.add('fas', 'fa-user', 'userIcon2', 'ms-5');
+                    userDiv.appendChild(userIcon);
+                    newMessage.appendChild(userDiv);
+
+                    // Add message text
+                    const chatContainerDiv = document.createElement('div');
+                    chatContainerDiv.classList.add('chatContainer', 'd-flex');
+                    const chatBubbleDiv = document.createElement('div');
+                    chatBubbleDiv.classList.add('chatBubble', 'askBubble', 'd-flex');
+                    const messageText = document.createElement('p');
+                    messageText.classList.add('textMessage', 'm-0', 'ms-1');
+                    messageText.textContent = lastMessage.text;
+                    chatBubbleDiv.appendChild(messageText);
+                    chatContainerDiv.appendChild(chatBubbleDiv);
+                    newMessage.appendChild(chatContainerDiv);
+
+                    // Add message date
+                    const messageDate = document.createElement('p');
+                    messageDate.classList.add('date', 'm-0', 'ms-3');
+                    messageDate.textContent = lastMessage.createdAt;
+                    newMessage.appendChild(messageDate);
+
+                    // Append new message to chat
+                    chatContainer.appendChild(newMessage);
                 }
+            });
 
-                const newMessageContainer = document.createElement('div');
-                newMessageContainer.className = 'ask d-flex align-items-center mb-5';
 
-                const newUserAsk = document.createElement('div');
-                newUserAsk.className = 'userAsk';
-                newUserAsk.innerHTML = '<i class="fas fa-user userIcon2"></i>';
-                newMessageContainer.appendChild(newUserAsk);
 
-                const newChatContainer = document.createElement('div');
-                newChatContainer.className = 'chatContainer';
 
-                const newChatBubble = document.createElement('div');
-                newChatBubble.className = 'chatBubble askBubble d-flex align-items-center justify-content-center';
-                const newMessage = document.createElement('p');
-                newMessage.className = 'textMessage ms-0 m-0';
-                newMessage.textContent = data.message;
-                newChatBubble.appendChild(newMessage);
-                newChatContainer.appendChild(newChatBubble);
+            socket.on('adminMessageAdded', function (data) {
+                console.log('Admin message added:', data);
 
-                newMessageContainer.appendChild(newChatContainer);
+                if (Array.isArray(data.messages)) {
+                    let lastMessage = data.messages[data.messages.length - 1];
+                    data.message = lastMessage.text;
+                    data.createdAt = lastMessage.createdAt;
 
-                const newCreatedAt = document.createElement('p');
-                newCreatedAt.className = 'date m-0 ms-3';
-                newCreatedAt.textContent = data.createdAt;
-                newMessageContainer.appendChild(newCreatedAt);
+                    // Create new message element
+                    const newMessage = document.createElement('div');
+                    newMessage.classList.add('response', 'd-flex', 'align-items-center', 'flex-row-reverse', 'mb-5');
 
-                const askResponseContainer = document.querySelector('.askResponseContainer');
-                askResponseContainer.appendChild(newMessageContainer);
-                const realtimeChat = document.querySelector('.realtimeChat');
-                realtimeChat.scrollTop = realtimeChat.scrollHeight;
+                    // Add user icon
+                    const userDiv = document.createElement('div');
+                    userDiv.classList.add('userResponse', 'd-flex', 'align-items-center');
+                    const userIcon = document.createElement('i');
+                    userIcon.classList.add('fas', 'fa-user', 'userIcon3', 'ms-5');
+                    userDiv.appendChild(userIcon);
+                    newMessage.appendChild(userDiv);
+
+                    // Add message text
+                    const chatContainerDiv = document.createElement('div');
+                    chatContainerDiv.classList.add('chatContainer', 'd-flex');
+                    const chatBubbleDiv = document.createElement('div');
+                    chatBubbleDiv.classList.add('chatBubble2', 'askBubble', 'd-flex');
+                    const messageText = document.createElement('p');
+                    messageText.classList.add('textMessage', 'm-0', 'ms-1');
+                    messageText.textContent = lastMessage.text;
+                    chatBubbleDiv.appendChild(messageText);
+                    chatContainerDiv.appendChild(chatBubbleDiv);
+                    newMessage.appendChild(chatContainerDiv);
+
+                    // Add message date
+                    const messageDate = document.createElement('p');
+                    messageDate.classList.add('date', 'm-0', 'ms-3');
+                    messageDate.textContent = lastMessage.createdAt;
+                    newMessage.appendChild(messageDate);
+
+                    // Append new message to chat
+                    chatContainer.appendChild(newMessage);
+                }
             });
         </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </script>
+
+        {{!-- filtering admin/subadmin msg --}}
+        <script>tickets.forEach(ticket => {
+                ticket.messages.forEach(message => {
+                    message.isAdmin = (message.role === 'admin' || message.role === 'subAdmin');
+                });
+            });
+        </script>
+        {{!-- filtering admin/subadmin msg --}}
+        {{!-- filtering users msg --}}
+
+        <script>tickets.forEach(ticket => {
+                ticket.messages.forEach(message => {
+                    message.isUser = (message.role === 'user');
+                });
+            });
+
+            // Pass the modified tickets to the Handlebars template
+            var template = Handlebars.compile(document.getElementById('template').innerHTML);
+            document.getElementById('target').innerHTML = template({ tickets: tickets });</script>
+        {{!-- filtering users msg --}}
         {{!-- DOM --}}
 
 </body>

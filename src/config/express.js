@@ -68,6 +68,7 @@ app.use("/api/tickets", ticketRouter);
 app.use("/", handlebarsRouter);
 /* products */
 
+
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

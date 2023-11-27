@@ -19,6 +19,15 @@ export function startIo(server) {
             }
         });
 
+        socket.on('getUserTickets', async (data) => {
+            try {
+                const tickets = await ticketManager.getUserTickets(data.userId);
+                socket.emit('userTickets', tickets);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
         socket.on('event', (data) => {
             console.log(data);
         });
@@ -27,7 +36,7 @@ export function startIo(server) {
             console.log('A client has disconnected');
         });
     });
-}
+};
 
 export function getIo() {
     if (!io) {
@@ -35,3 +44,4 @@ export function getIo() {
     }
     return io;
 }
+

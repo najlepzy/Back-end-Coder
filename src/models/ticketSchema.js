@@ -8,6 +8,11 @@ const MessageSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'subAdmin'],
+        required: true
     }
 });
 
@@ -17,7 +22,7 @@ const TicketSchema = new Schema({
         ref: 'Users',
         required: true
     },
-    message: [MessageSchema]
+    messages: [MessageSchema]
 }, { versionKey: false });
 
 const Ticket = mongoose.model('Tickets', TicketSchema, "Tickets");

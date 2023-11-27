@@ -9,12 +9,25 @@ ticketRouter.post('/', async (req, res) => {
     try {
         const ticket = await ticketManager.createTicket(req.body.userId, req.body.message);
         const io = getIo();
-        io.emit('ticketCreated', ticket); // Emit the 'ticketCreated' event
+        io.emit('ticketCreated', ticket);
         res.status(201).json(ticket);
     } catch (error) {
         res.status(500).json({ error: error.toString() });
     }
 });
+
+ticketRouter.post('/addAdminMsg', async (req, res) => {
+    try {
+        const { adminId, ticketId, message } = req.body;
+        const ticket = await ticketManager.addAdminMessage(adminId, ticketId, message);
+        const io = getIo();
+        io.emit('adminMessageAdded', ticket);
+        res.status(201).json(ticket);
+    } catch (error) {
+        res.status(500).json({ error: error.toString() });
+    }
+});
+
 
 ticketRouter.get('/', async (req, res) => {
     try {
@@ -33,5 +46,7 @@ ticketRouter.get('/:id', async (req, res) => {
         res.status(500).json({ error: error.toString() });
     }
 });
+
+
 
 export default ticketRouter;

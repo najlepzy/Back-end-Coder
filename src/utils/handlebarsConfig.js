@@ -3,6 +3,7 @@ import ProductManager from '../controllers/dao/productManager.js';
 import TicketManager from '../controllers/dao/ticketManager.js';
 import UserManager from '../controllers/dao/userManager.js';
 
+
 const handlebarsRouter = express.Router();
 const productManager = new ProductManager();
 const userManager = new UserManager();
@@ -65,7 +66,14 @@ handlebarsRouter.get('/chat', async (req, res) => {
     if (user) {
         try {
             const tickets = await userManager.getUserTickets(user._id);
-            // Obtener todos los mensajes en una sola matriz
+
+            tickets.forEach(ticket => {
+                ticket.messages.forEach(message => {
+                    message.isAdmin = (message.role === 'admin' || message.role === 'subAdmin');
+                    message.isUser = (message.role === 'user');
+                });
+            });
+
             const messages = tickets.flatMap(ticket => ticket.message);
 
             res.render('chat', { tickets, messages, username: user.username, userId: user._id });
