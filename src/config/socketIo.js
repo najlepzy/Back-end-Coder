@@ -27,6 +27,35 @@ export function startIo(server) {
                 console.error(error);
             }
         });
+        socket.on('getMessages', async (ticketId) => {
+            try {
+                const ticket = await ticketManager.getTicket(ticketId);
+                const lastChecked = ticket.lastChecked;
+                const newMessages = ticket.messages.filter(message => message.timestamp > lastChecked);
+                if (newMessages.length > 0) {
+                    socket.emit('updateChat', ticket);
+                    ticket.lastChecked = Date.now();
+                    await ticketManager.updateTicket(ticket);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        socket.on('register', async (data) => {
+            try {
+                const ticket = await ticketManager.getTicketById(data.ticketId);
+                const lastChecked = ticket.lastChecked;
+                const newMessages = ticket.messages.filter(message => message.timestamp > lastChecked);
+                if (newMessages.length > 0) {
+                    socket.emit('updateChat', ticket);
+                    ticket.lastChecked = Date.now();
+                    await ticketManager.updateTicket(ticket);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
 
         socket.on('event', (data) => {
             console.log(data);

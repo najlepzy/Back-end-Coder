@@ -51,7 +51,11 @@
             cursor: pointer;
             border: 2px solid rgba(0, 0, 0, 0.148);
             background-color: #f5f5f58e;
+        }
 
+        .usersBoxes.active {
+            border: 2px solid rgba(0, 0, 0, 0.163);
+            background-color: #5d4d4d0b;
         }
 
         .userInfo {
@@ -96,6 +100,12 @@
             padding: 10px 30px;
         }
 
+        .topsideBarUserName {
+            color: rgba(0, 0, 255, 0.668);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
         .userIcon {
             border: 2px solid rgba(0, 0, 255, 0.668);
             border-radius: 15%;
@@ -128,22 +138,34 @@
             overflow-y: auto;
         }
 
+        .ask {
+            width: 100%;
+        }
+
+        .response {
+            width: 100%;
+        }
+
         .chatBubble {
-            max-width: 60%;
+            max-width: 90%;
             padding: 10px;
             margin-left: 50px;
             border-radius: 20px;
             background-color: #f0f0f0;
             position: relative;
+            white-space: normal;
+            overflow-wrap: break-word;
         }
 
         .chatBubble2 {
-            max-width: 60%;
+            max-width: 90%;
             padding: 10px;
             margin-left: 50px;
             border-radius: 20px;
             background-color: #f0f0f0;
             position: relative;
+            white-space: normal;
+            overflow-wrap: break-word;
         }
 
         .chatBubble::after {
@@ -157,15 +179,25 @@
             border-color: transparent #f0f0f0 transparent transparent;
         }
 
-        .topsideBarUserName {
-            color: rgba(97, 77, 77, 0.723);
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-            font-weight: bold;
+        .chatBubble2::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -10px;
+            width: 0;
+            height: 0;
+            border: 10px solid;
+            border-color: transparent #f0f0f0 transparent transparent;
+        }
+
+        .textMessage {
+            font-weight: 500;
+            width: 100%;
+            word-break: break-word;
         }
 
         .us {
             font-weight: bold;
-            color: rgba(0, 0, 255, 0.668);
         }
 
         .newMessageContainer {
@@ -174,7 +206,7 @@
             right: 0;
             width: 80%;
             height: 95px;
-            background-color: #f5f5f58e;
+            background-color: #f5f5f5;
             border: 2px solid rgba(0, 0, 0, 0.045);
             padding: 10px 30px;
         }
@@ -207,6 +239,7 @@
             background-color: rgba(0, 0, 255, 0.812);
         }
 
+
         #logoutButton {
             width: 100px;
             height: 40px;
@@ -219,6 +252,13 @@
             background-color: rgba(0, 0, 255, 0.812);
             color: rgba(0, 0, 0, 0.657);
         }
+
+        .date {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.567);
+            font-weight: 500;
+            margin-left: -240px;
+        }
     </style>
     <title>Admin Chat</title>
 </head>
@@ -228,7 +268,7 @@
         <div class="chatBody">
             <div class="verticalUsersBar d-flex flex-column">
                 {{#each tickets}}
-                <div class="usersBoxes" onclick="logTicketId('{{this._id}}')">
+                <div class="usersBoxes" data-ticket-id="{{this._id}}" onclick="logTicketId('{{this._id}}')">
                     <div>UID: <span class="userInfo">{{this.userId._id}}</span> </div>
                     <div>USERNAME: <span class="userInfo">{{this.userId.username}}</span></div>
                 </div>
@@ -261,43 +301,30 @@
 
             </div>
 
+            <!-- Messages -->
             <div class="realtimeChat d-flex flex-column">
-                {{!-- CHAT STARTS HERE --}}
-                {{!-- AskUser --}}
-                <div class="askResponseContainer w-100">
-                    <div class="ask d-flex align-items-center mb-5">
-                        <div class="userAsk">
-                            <i class="fas fa-user userIcon2"></i>
-                        </div>
-                        <div class="chatContainer">
-                            <div class="chatBubble askBubble d-flex">
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Recusandae id illum possimus
-                                    aliquid, quibusdam totam nobis dolore neque officia nesciunt.</p>
-                            </div>
+                {{#each tickets}}
+                {{#each this.messages}}
+                <div
+                    class="{{#if this.isUser}}ask d-flex align-items-center justify-content-start{{else}}response d-flex align-items-center flex-row-reverse{{/if}} mb-5">
+                    <div class="user{{#if this.isUser}}Ask{{else}}Response{{/if}} d-flex align-items-center">
+                        <i class="fas fa-user userIcon{{#if this.isUser}}2{{else}}3{{/if}} ms-5"></i>
+                    </div>
+                    <div class="chatContainer d-flex">
+                        <div class="chatBubble{{#if this.isAdmin}}2{{/if}} askBubble d-flex">
+                            <p class="textMessage m-0 ms-1">{{this.text}}</p>
                         </div>
                     </div>
-                    {{!-- AskUser --}}
-
-                    {{!-- responseUser --}}
-                    <div class="response d-flex align-items-center flex-row-reverse mb-5">
-                        <div class="userResponse">
-                            <i class="fas fa-user userIcon3 ms-5"></i>
-                        </div>
-                        <div class="chatContainer d-flex justify-content-end">
-                            <div class="chatBubble2 askBubble d-flex">
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias tenetur temporibus
-                                    ad ex reiciendis vel aut ipsa deleniti consectetur accusantium!.</p>
-                            </div>
-                        </div>
-                    </div>
-                    {{!-- responseUser --}}
+                    <p class="date m-0 ms-3">{{this.createdAt}}</p>
                 </div>
+                {{/each}}
+                {{/each}}
             </div>
-            {{!-- CHAT ENDS HERE --}}
+            <!-- Messages -->
         </div>
         <div class="newMessageContainer d-flex justify-content-between align-items-center">
             <input type="text" class="messageSquare">
-            <button class="sendBtn">Send</button>
+            <button id="sendBtn" class="sendBtn">Send</button>
         </div>
 
 
@@ -308,6 +335,182 @@
 
         {{!-- DOM --}}
 
+
+
+
+
+
+
+
+
+        <script src="/socket.io/socket.io.js"></script>
+
+
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const socket = io();
+                let chat = document.querySelector('.realtimeChat');
+                let userBoxes = document.querySelectorAll('.usersBoxes');
+
+                socket.emit('register', { ticketId: localStorage.getItem('selectedTicketId') });
+
+                socket.on('updateChat', function (updatedTicket) {
+                    if (updatedTicket._id === localStorage.getItem('selectedTicketId')) {
+                        loadMessages(updatedTicket._id, chat);
+                    }
+                });
+
+                userBoxes.forEach(function (userBox) {
+                    userBox.addEventListener('click', function () {
+                        userBoxes.forEach(function (box) {
+                            box.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        let ticketId = this.dataset.ticketId;
+                        localStorage.setItem('selectedTicketId', ticketId);
+                        loadMessages(ticketId, chat);
+                    });
+                });
+
+                let storedTicketId = localStorage.getItem('selectedTicketId');
+                if (storedTicketId) {
+                    loadMessages(storedTicketId, chat);
+                }
+            });
+
+            function createMessageElement(message, chat) {
+                let messageDiv = document.createElement('div');
+                let userDiv = document.createElement('div');
+                let icon = document.createElement('i');
+                let chatContainer = document.createElement('div');
+                let chatBubble = document.createElement('div');
+                let textMessage = document.createElement('p');
+                let date = document.createElement('p');
+
+                date.className = 'date m-0 ms-3';
+                date.textContent = message.createdAt;
+
+                textMessage.className = 'textMessage m-0 ms-1';
+                textMessage.textContent = message.text;
+
+                chatBubble.appendChild(textMessage);
+                chatContainer.appendChild(chatBubble);
+                userDiv.appendChild(icon);
+                messageDiv.appendChild(userDiv);
+                messageDiv.appendChild(chatContainer);
+                messageDiv.appendChild(date);
+
+                if (message.role === 'user') {
+                    messageDiv.className = 'ask d-flex align-items-center justify-content-start mb-5';
+                    userDiv.className = 'userAsk d-flex align-items-center';
+                    icon.className = 'fas fa-user userIcon2 ms-5';
+                    chatBubble.className = 'chatBubble askBubble d-flex';
+                } else if (message.role === 'admin') {
+                    messageDiv.className = 'response d-flex align-items-center flex-row-reverse mb-5';
+                    userDiv.className = 'userResponse d-flex align-items-center';
+                    icon.className = 'fas fa-user userIcon3 ms-5';
+                    chatBubble.className = 'chatBubble2 askBubble d-flex';
+                }
+
+                chat.appendChild(messageDiv);
+            }
+
+            function loadMessages(ticketId, chat) {
+                let messagesLoaded = {};
+
+                if (messagesLoaded[ticketId]) return;
+
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', `http://localhost:8082/api/tickets/${ticketId}`, true);
+
+                let oldMessages = chat.innerHTML;
+
+                xhr.onload = function () {
+                    if (this.status === 200) {
+                        let ticket = JSON.parse(this.responseText);
+                        chat.innerHTML = '';
+                        ticket.messages.forEach(function (message) {
+                            createMessageElement(message, chat);
+                        });
+
+                        chat.scrollTop = chat.scrollHeight;
+
+                        if (oldMessages !== chat.innerHTML && !messagesLoaded[ticketId]) {
+                            messagesLoaded[ticketId] = true;
+                        }
+                    } else if (this.status === 404) {
+                        console.error('Ticket not found');
+                    } else {
+                        console.error(`An error occurred: ${this.status}`);
+                    }
+                };
+
+                xhr.onerror = function () {
+                    console.error('A network error occurred');
+                };
+
+                xhr.send();
+            }
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+        </script>
+
+
+
+
+
+
+
+        {{!-- active effect on userBoxes --}}
+        <script> document.addEventListener('DOMContentLoaded', function () {
+                var userBoxes = document.querySelectorAll('.usersBoxes');
+                userBoxes.forEach(function (userBox) {
+                    userBox.addEventListener('click', function () {
+                        userBoxes.forEach(function (box) {
+                            box.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    });
+                });
+            });</script>
+
+
+
+        {{!-- active effect on userBoxes --}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+        {{!-- logout funct --}}
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('logoutButton').addEventListener('click', function () {
@@ -323,12 +526,37 @@
             });
 
         </script>
+        {{!-- logout funct --}}
+
+        <script>document.addEventListener('DOMContentLoaded', function () {
+                document.getElementById('sendBtn').addEventListener('click', function () {
+                    let messageInput = document.querySelector('.messageSquare');
+                    let message = messageInput.value;
+                    let userId = '{{userId}}';
+                    let ticketId = localStorage.getItem('selectedTicketId');
+
+                    let xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'http://localhost:8082/api/tickets/addAdminMsg', true);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.onload = function () {
+                        if (this.status != 200 && this.status != 201) {
+                            console.error('An error occurred: ' + this.status);
+                        }
+                    };
+                    xhr.send(JSON.stringify({
+                        adminId: userId,
+                        ticketId: ticketId,
+                        message: message
+                    }));
+                    messageInput.value = '';
+                });
+            });</script>
+
         <script>
             function logTicketId(ticketId) {
                 console.log(ticketId);
             }
         </script>
-
 
         {{!-- DOM --}}
 

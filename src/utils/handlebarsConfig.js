@@ -56,7 +56,13 @@ handlebarsRouter.get('/support-chat', async (req, res) => {
     const tickets = await ticketManager.getAllTickets();
     const user = req.session.user;
     if (user) {
-        res.render('adminViewChat', { tickets, username: user.username });
+        tickets.forEach(ticket => {
+            ticket.messages.forEach(message => {
+                message.isAdmin = (message.role === 'admin' || message.role === 'subAdmin');
+                message.isUser = (message.role === 'user');
+            });
+        });
+        res.render('adminViewChat', {  tickets,username: req.session.user.username, userId: req.session.user._id });
     } else {
         res.redirect('/login');
     }

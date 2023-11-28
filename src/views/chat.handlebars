@@ -223,16 +223,18 @@
 
         .sendBtn {
             border-radius: 5px;
-            width: 110px;
+            width: 120px;
             height: 60px;
             background-color: rgba(0, 0, 255, 0.668);
             border: 2px solid black;
             transition: background-color 0.3s ease;
+            font-weight: 500;
         }
 
         .sendBtn:hover {
             background-color: rgba(0, 0, 255, 0.812);
         }
+
 
         #logoutButton {
             width: 100px;
@@ -383,6 +385,7 @@
 
                     // Append new message to chat
                     chatContainer.appendChild(newMessage);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
             });
 
@@ -429,6 +432,7 @@
 
                     // Append new message to chat
                     chatContainer.appendChild(newMessage);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
             });
         </script>

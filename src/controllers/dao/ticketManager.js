@@ -34,7 +34,7 @@ class TicketManager {
             const savedTicket = await ticket.save();
             const formattedTicket = formatTicketDates(savedTicket);
 
-            return formattedTicket; // Return formattedTicket instead of savedTicket
+            return formattedTicket;
         } catch (error) {
             throw new Error('Error saving ticket: ' + error.message);
         }
@@ -54,12 +54,12 @@ class TicketManager {
 
         ticket.messages.push({ text: message, createdAt: Date.now(), role: 'user' });
 
-        ticket.markModified('message');
-
+        ticket.markModified('messages');
         try {
             const savedTicket = await ticket.save();
             const io = getIo();
-            io.emit('messageAdded', { ticketId: savedTicket._id, message });
+
+            io.emit('messageAdded', savedTicket);
             return formatTicketDates(savedTicket);
         } catch (error) {
             throw new Error('Error saving ticket: ' + error.message);
@@ -94,7 +94,7 @@ class TicketManager {
         }
     }
 
-    async getAllTickets(user) {
+    async getAllTickets() {
         try {
             const tickets = await Ticket.find().populate('userId', 'username');
             return tickets.map(ticket => formatTicketDates(ticket));
@@ -102,6 +102,24 @@ class TicketManager {
             throw new Error('Error getting tickets: ' + error.message);
         }
     }
+    async getTicketById(ticketId) {
+        try {
+            const ticket = await Ticket.findById(ticketId);
+            if (!ticket) {
+                throw new Error('Ticket not found');
+            }
+
+            const io = getIo();
+
+            // Cambia 'ticketFetched' a 'updateChat'
+            io.emit('updateChat', formatTicketDates(ticket));
+
+            return formatTicketDates(ticket);
+        } catch (error) {
+            throw new Error('Error getting ticket: ' + error.message);
+        }
+    }
+
 
     async getUserTickets(userId) {
         try {
@@ -113,35 +131,6 @@ class TicketManager {
             });
         } catch (error) {
             throw new Error('Error getting user tickets: ' + error.message);
-        }
-    }
-    async addAdminReply(adminId, ticketId, message) {
-        const adminUser = await Admin.findById(adminId) || await SubAdmin.findById(adminId);
-        if (!adminUser) {
-            throw new Error('Admin user not found');
-        }
-
-        let ticket = await Ticket.findById(ticketId);
-        if (!ticket) {
-            throw new Error('Ticket not found');
-        }
-
-        const reply = { text: message, createdAt: Date.now(), role: adminUser.role };
-        ticket.messages.push(reply);
-
-        ticket.markModified('messageReply');
-
-        try {
-            const savedTicket = await ticket.save();
-            const formattedTicket = formatTicketDates(savedTicket);
-            const io = getIo();
-            io.emit('adminReplyAdded', { ticketId: savedTicket._id, message: formattedTicket.messageReply[formattedTicket.messageReply.length - 1] });
-
-            io.emit('messageReplyUpdated', formattedTicket.messageReply[formattedTicket.messageReply.length - 1]);
-
-            return formattedTicket;
-        } catch (error) {
-            throw new Error('Error saving ticket: ' + error.message);
         }
     }
 }
