@@ -52,14 +52,46 @@ cartRouter.post('/:cartId', async (req, res) => {
 });
 
 /**
+ * Update a cart with an array of products.
+ * @route PUT /api/carts/:cid
+ * @param {express.Request} req - Express request object.
+ * @param {express.Response} res - Express response object.
+ */
+cartRouter.put('/:cid', async (req, res) => {
+    const { products } = req.body;
+    try {
+        const cart = await cartManager.updateCart(req.params.cid, products);
+        res.json(cart);
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+});
+
+/**
+ * Update the quantity of a specific product in a cart.
+ * @route PUT /api/carts/:cid/products/:pid
+ * @param {express.Request} req - Express request object.
+ * @param {express.Response} res - Express response object.
+ */
+cartRouter.put('/:cid/products/:pid', async (req, res) => {
+    const { quantity } = req.body;
+    try {
+        const cart = await cartManager.updateProductQuantity(req.params.cid, req.params.pid, quantity);
+        res.json(cart);
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+});
+
+/**
  * Remove a product from a cart.
  * @route DELETE /:cartId/:productId
  * @param {express.Request} req - Express request object.
  * @param {express.Response} res - Express response object.
  */
-cartRouter.delete('/:cartId/:productId', async (req, res) => {
+cartRouter.delete('/:cid/products/:pid', async (req, res) => {
     try {
-        const cart = await cartManager.removeProductFromCart(req.params.cartId, req.params.productId);
+        const cart = await cartManager.removeProductFromCart(req.params.cid, req.params.pid);
         res.json(cart);
     } catch (error) {
         res.status(400).send(error.message);
@@ -74,10 +106,10 @@ cartRouter.delete('/:cartId/:productId', async (req, res) => {
  */
 cartRouter.delete('/:cartId', async (req, res) => {
     try {
-      await cartManager.deleteCart(req.params.cartId);
-      res.status(200).send('Cart deleted successfully');
+        await cartManager.deleteCart(req.params.cartId);
+        res.status(200).send('Cart deleted successfully');
     } catch (error) {
-      res.status(400).send(error.message);
+        res.status(400).send(error.message);
     }
 });
 

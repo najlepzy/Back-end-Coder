@@ -19,11 +19,21 @@ class ProductManager {
   }
 
   /**
-   * Get all products.
-   * @returns {Array} The products.
-   */
+  * Get all products.
+  * @returns {Array} The products.
+  */
   getProducts() {
     return this.products;
+  }
+
+  /**
+   * Get products based on a category.
+   * @param {string} category - The category to filter products.
+   * @returns {Promise<Array>} The products.
+   */
+  async getProductsByCategory(category) {
+    const products = await Products.find({ category });
+    return products;
   }
 
   /**
@@ -52,6 +62,10 @@ class ProductManager {
    * @returns {Promise<void>}
    */
   async addProduct(productData) {
+    if (!productData.category) {
+      throw new Error('Category is required');
+    }
+
     const product = new Products(productData);
     await product.save();
     const io = getIo();

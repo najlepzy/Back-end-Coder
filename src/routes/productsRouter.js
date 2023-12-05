@@ -9,21 +9,51 @@ const productRouter = express.Router();
  */
 productRouter.get('/', async (req, res) => {
     try {
-        let limit = parseInt(req.query.limit);
-        if (isNaN(limit)) {
-            limit = await Products.countDocuments();
+        let { limit, page, sort, category } = req.query;
+        limit = parseInt(limit) || 10;
+        page = parseInt(page) || 1;
+        let query = category ? { category } : {};
+
+        let sortOption = {};
+        if (sort) {
+            sortOption.price = sort === 'asc' ? 1 : -1;
         }
-        if (limit <= 0) {
-            return res.status(400).json({ message: 'Limit must be a positive number' });
+
+        const options = {
+            page,
+            limit,
+            sort: sortOption,
+            collation: {
+                locale: 'en',
+            },
+        };
+
+        let result = await Products.paginate(query, options);
+
+        if (!sort) {
+            result.docs.sort((a, b) => {
+                const numA = parseInt(a.code.substring(1));
+                const numB = parseInt(b.code.substring(1));
+                return numA - numB;
+            });
         }
-        const totalProducts = await Products.countDocuments();
-        if (limit > totalProducts) {
-            return res.status(400).json({ message: 'Limit exceeds the number of products' });
-        }
-        const products = await Products.find().limit(limit);
-        res.json(products);
+
+        let response = {
+            status: 'success',
+            payload: result.docs,
+            totalPages: result.totalPages,
+            prevPage: result.prevPage,
+            nextPage: result.nextPage,
+            page: result.page,
+            hasPrevPage: result.hasPrevPage,
+            hasNextPage: result.hasNextPage,
+            prevLink: result.hasPrevPage ? `${req.protocol}://${req.get('host')}${req.originalUrl.split('?')[0]}?page=${result.page - 1}` : null,
+            nextLink: result.hasNextPage ? `${req.protocol}://${req.get('host')}${req.originalUrl.split('?')[0]}?page=${result.page + 1}` : null
+        };
+
+        res.json(response);
     } catch (error) {
-        res.status(500).json({ message: 'Error getting products' });
+        res.status(500).json({ status: 'error', message: 'Error getting products' });
     }
 });
 

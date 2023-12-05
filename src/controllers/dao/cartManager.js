@@ -26,12 +26,12 @@ class CartManager {
   }
 
   /**
-   * Get a cart by its ID.
-   * @param {string} cartId - The ID of the cart.
-   * @returns {Promise<Cart>} The cart.
-   */
+    * Get a cart by its ID.
+    * @param {string} cartId - The ID of the cart.
+    * @returns {Promise<Cart>} The cart.
+    */
   async getCart(cartId) {
-    const cart = await Cart.findById(cartId).populate('products.productId', '_id title price thumbnail');
+    const cart = await Cart.findById(cartId);
     return cart;
   }
 
@@ -67,6 +67,43 @@ class CartManager {
   }
 
   /**
+ * Update a cart with an array of products.
+ * @param {string} cartId - The ID of the cart.
+ * @param {Array<{productId: string, quantity: number}>} products - The new array of products.
+ * @returns {Promise<Cart>} The updated cart.
+ */
+  async updateCart(cartId, products) {
+    const cart = await Cart.findById(cartId);
+    if (!cart) {
+      throw new Error('Cart not found');
+    }
+    cart.products = products;
+    await cart.save();
+    return cart;
+  }
+
+  /**
+  * Update the quantity of a specific product in a cart.
+  * @param {string} cartId - The ID of the cart.
+  * @param {string} productId - The ID of the product.
+  * @param {number} quantity - The new quantity of the product.
+  * @returns {Promise<Cart>} The updated cart.
+  */
+  async updateProductQuantity(cartId, productId, quantity) {
+    const cart = await Cart.findById(cartId);
+    if (!cart) {
+      throw new Error('Cart not found');
+    }
+    const product = cart.products.find(p => p.productId.toString() === productId);
+    if (!product) {
+      throw new Error('Product not found in cart');
+    }
+    product.quantity = quantity;
+    await cart.save();
+    return cart;
+  }
+
+  /**
    * Remove a product from a cart.
    * @param {string} cartId - The ID of the cart.
    * @param {string} productId - The ID of the product.
@@ -77,11 +114,14 @@ class CartManager {
     if (!cart) {
       throw new Error('Cart not found');
     }
-    const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
-    if (productIndex === -1) {
+    const cartProduct = cart.products.find(p => p.productId.toString() === productId);
+    if (!cartProduct) {
       throw new Error('Product not found in cart');
     }
-    cart.products.splice(productIndex, 1);
+    cartProduct.quantity -= 1;
+    if (cartProduct.quantity === 0) {
+      cart.products = cart.products.filter(p => p.productId.toString() !== productId);
+    }
     await cart.save();
     return cart;
   }

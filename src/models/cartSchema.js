@@ -23,6 +23,13 @@ const CartSchema = new Schema({
     products: [CartItemSchema]
 }, { versionKey: false });
 
+CartSchema.pre('find', function () {
+    this.populate('products.productId', '_id title price thumbnail');
+});
+
+CartSchema.pre('findOne', function () {
+    this.populate('products.productId', '_id title price thumbnail');
+});
 /**
  * Cart model.
  * @type {mongoose.Model}

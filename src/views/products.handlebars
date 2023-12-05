@@ -1,0 +1,56 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <style>
+    .custom-description {
+      height: 200px;
+    }
+
+    .custom-description .description-details {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .custom-description .description-details p {
+      flex: 1;
+    }
+  </style>
+  <title>{{title}}</title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      {{#each products}}
+      <div class="col-md-4 mb-4">
+        <div class="card" style="height: 560px; margin-top:80px;">
+          <img src="{{this.thumbnail}}" class="card-img-top mx-auto" style="max-height: 289px;  max-width: 100%;" />
+          <div class="card-body d-flex flex-column align-items-center">
+            <h5 class="card-title">{{this.title}}</h5>
+            <div class="card-description custom-description">
+              <p class="card-text">{{this.description}}</p>
+              <div class="description-details">
+                <p>Price: ${{this.price}}</p>
+                <p>Stock: {{this.stock}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+    
+  </div>
+
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>

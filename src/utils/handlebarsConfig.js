@@ -14,6 +14,10 @@ handlebarsRouter.get('/', async (req, res) => {
     const products = await productManager.getProducts();
     res.render('home', { products });
 });
+handlebarsRouter.get('/products', async (req, res) => {
+    const products = await productManager.getProducts();
+    res.render('products', { products });
+});
 
 handlebarsRouter.get('/realtime-products', async (req, res) => {
     const products = await productManager.getProducts();
