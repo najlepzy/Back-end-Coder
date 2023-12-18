@@ -2,6 +2,8 @@ import express from 'express';
 import UserManager from '../controllers/dao/userManager.js';
 import checkBlacklistedToken from '../middleware/checkBlacklistedToken.js';
 import { getIo } from '../config/socketIo.js';
+import cookieParser from 'cookie-parser';
+
 
 const userRouter = express.Router();
 const userManager = new UserManager();
@@ -11,7 +13,7 @@ userRouter.post('/signUp', async (req, res) => {
     try {
         const user = await userManager.createUser(req.body.username, req.body.email, req.body.password, req.body.role);
         const io = getIo();
-        io.emit('userCreated', user); // Emit the 'userCreated' event
+        io.emit('userCreated', user);
         res.status(201).json(user);
     } catch (error) {
         res.status(500).json({ error: error.toString() });
@@ -19,10 +21,11 @@ userRouter.post('/signUp', async (req, res) => {
 });
 
 
-userRouter.post('/login', async (req, res) => {
+userRouter.post('/login', cookieParser(), async (req, res) => {
     try {
         const { email, password, role } = req.body;
         const { user, token } = await userManager.login(email, password, role);
+        res.cookie('token', token, { httpOnly: true });
         res.status(200).json({ user, token });
     } catch (error) {
         res.status(500).json({ error: error.toString() });
