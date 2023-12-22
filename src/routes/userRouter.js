@@ -3,28 +3,23 @@ import UserManager from '../controllers/dao/userManager.js';
 import checkBlacklistedToken from '../middleware/checkBlacklistedToken.js';
 import { getIo } from '../config/socketIo.js';
 import cookieParser from 'cookie-parser';
+import passport from "../middleware/passport.js";
+
+
 
 
 const userRouter = express.Router();
 const userManager = new UserManager();
 
 
-userRouter.post('/signUp', async (req, res) => {
-    try {
-        const user = await userManager.createUser(req.body.username, req.body.email, req.body.password, req.body.role);
-        const io = getIo();
-        io.emit('userCreated', user);
-        res.status(201).json(user);
-    } catch (error) {
-        res.status(500).json({ error: error.toString() });
-    }
+userRouter.post('/signUp', passport.authenticate('signUp', { session: false }), (req, res) => {
+    res.status(201).json(req.user);
 });
 
 
-userRouter.post('/login', cookieParser(), async (req, res) => {
+userRouter.post('/login', cookieParser(), passport.authenticate('login', { session: false }), (req, res) => {
     try {
-        const { email, password, role } = req.body;
-        const { user, token } = await userManager.login(email, password, role);
+        const { user, token } = req.user;
         res.cookie('token', token, { httpOnly: true });
         res.status(200).json({ user, token });
     } catch (error) {
